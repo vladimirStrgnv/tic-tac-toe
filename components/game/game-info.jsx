@@ -1,33 +1,120 @@
 import clsx from "clsx";
 import { Profile } from "../profile";
-import { CrossIcon } from "./icons/cross-icon";
+import { GameSymbol } from "./game-symbol";
+import { GAME_SYMBOLS } from "./constants";
+import avatarSrc1 from "./images/avatar-1.png";
+import avatarSrc2 from "./images/avatar-2.png";
+import avatarSrc3 from "./images/avatar-3.png";
+import avatarSrc4 from "./images/avatar-4.png";
+import { useEffect, useState } from "react";
 
-export function GameInfo({ className }) {
+const players = [
+  {
+    id: 1,
+    name: "Strogonov",
+    rating: 1230,
+    avatar: avatarSrc1,
+    symbol: GAME_SYMBOLS.CROSS,
+  },
+  {
+    id: 2,
+    name: "Ivanovaetrovaer",
+    rating: 1231,
+    avatar: avatarSrc2,
+    symbol: GAME_SYMBOLS.ZERO,
+  },
+  {
+    id: 3,
+    name: "Petrova",
+    rating: 1232,
+    avatar: avatarSrc3,
+    symbol: GAME_SYMBOLS.TRINGLE,
+  },
+  {
+    id: 4,
+    name: "Serov",
+    rating: 1233,
+    avatar: avatarSrc4,
+    symbol: GAME_SYMBOLS.SQUARE,
+  },
+];
+
+export function GameInfo({ className, playersCount, currentMove }) {
   return (
     <div
-      className={clsx(className, "flex justify-between  bg-white rounded-2xl shadow-md px-8 py-4")}
+      className={clsx(
+        className,
+        "grid grid-cols-2 gap-3  bg-white rounded-2xl shadow-md px-8 py-4",
+      )}
     >
+      {players.slice(0, playersCount).map((player, index) => {
+        return (
+          <PlayerInfo
+            key={player.id}
+            playerInfo={player}
+            isRight={index % 2 === 1}
+            isTimeRunning={currentMove === player.symbol}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
-      <div className="flex gap-3 items-center">
-        <div className="relative">
-          <Profile className="w-44"/>
-          <div className="w-5 h-5 rounded-full bg-white shadow absolute -left-1 -top-1 flex items-center justify-center">
-            <CrossIcon />
-          </div>
+function PlayerInfo({ playerInfo, isRight, isTimeRunning }) {
+  const [seconds, setSeconds] = useState(60);
+
+  const minutesString = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const secondsString = String(seconds % 60).padStart(2, "0");
+
+  const isDanger = seconds < 10;
+
+  useEffect(() => {
+    if (isTimeRunning) {
+      const interval = setInterval(() => {
+        setSeconds((s) => Math.max(s - 1, 0));
+      }, 1000);
+
+      return () => {
+        clearInterval(interval);
+        setSeconds(60);
+      };
+    }
+  }, [isTimeRunning]);
+
+  const getTimerColor = () => {
+    if (isTimeRunning) {
+      return isDanger ? "text-orange-500" : "text-slate-900";
+    }
+    return 'text-slate-200'
+  };
+
+  return (
+    <div className="flex gap-3 items-center">
+      <div className={clsx("relative", isRight && "order-3")}>
+        <Profile
+          className="w-44"
+          symbol={playerInfo.symbol}
+          name={playerInfo.name}
+          rating={playerInfo.rating}
+          avatar={playerInfo.avatar}
+          {...playerInfo}
+        />
+        <div className="w-5 h-5 rounded-full bg-white shadow absolute -left-1 -top-1 flex items-center justify-center">
+          <GameSymbol />
         </div>
-        <div className="h-6 w-px bg-slate-200"></div>
-        <div className="text-slate-900 text-lg font-semibold">01:08</div>
       </div>
-
-      <div className="flex gap-3 items-center">
-      <div className="text-orange-600 text-lg font-semibold">00:08</div>
-      <div className="h-6 w-px bg-slate-200"></div>
-        <div className="relative">
-          <Profile className="w-44"/>
-          <div className="w-5 h-5 rounded-full bg-white shadow absolute -left-1 -top-1 flex items-center justify-center">
-            <CrossIcon />
-          </div>
-        </div>
+      <div
+        className={clsx("h-6 w-px bg-slate-200", isRight && "order-2")}
+      ></div>
+      <div
+        className={clsx(
+          "text-slate-900 text-lg font-semibold w-[60px]",
+          isRight && "order-1",
+          getTimerColor()
+        )}
+      >
+        {minutesString}:{secondsString}
       </div>
     </div>
   );

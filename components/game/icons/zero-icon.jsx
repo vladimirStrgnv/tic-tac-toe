@@ -1,6 +1,9 @@
-export function ZeroIcon() {
+import clsx from "clsx";
+
+export function ZeroIcon({ className }) {
   return (
     <svg
+      className={clsx("text-teal-600", className)}
       width="12"
       height="12"
       viewBox="0 0 12 12"
