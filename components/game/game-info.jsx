@@ -39,7 +39,13 @@ const players = [
   },
 ];
 
-export function GameInfo({ className, playersCount, currentMove }) {
+export function GameInfo({
+  className,
+  playersCount,
+  currentMove,
+  isWinner,
+  onPlayerTimeOver,
+}) {
   return (
     <div
       className={clsx(
@@ -53,7 +59,8 @@ export function GameInfo({ className, playersCount, currentMove }) {
             key={player.id}
             playerInfo={player}
             isRight={index % 2 === 1}
-            isTimeRunning={currentMove === player.symbol}
+            isTimeRunning={currentMove === player.symbol && !isWinner}
+            onTimeOver={() => onPlayerTimeOver(player.symbol)}
           />
         );
       })}
@@ -61,8 +68,8 @@ export function GameInfo({ className, playersCount, currentMove }) {
   );
 }
 
-function PlayerInfo({ playerInfo, isRight, isTimeRunning }) {
-  const [seconds, setSeconds] = useState(60);
+function PlayerInfo({ playerInfo, isRight, isTimeRunning, onTimeOver }) {
+  const [seconds, setSeconds] = useState(6);
 
   const minutesString = String(Math.floor(seconds / 60)).padStart(2, "0");
   const secondsString = String(seconds % 60).padStart(2, "0");
@@ -76,17 +83,23 @@ function PlayerInfo({ playerInfo, isRight, isTimeRunning }) {
       }, 1000);
 
       return () => {
-        clearInterval(interval);
         setSeconds(60);
+        clearInterval(interval);
       };
     }
   }, [isTimeRunning]);
 
+  useEffect(() => {
+    if (seconds === 0) {
+      onTimeOver();
+    }
+  }, [seconds]);
+
   const getTimerColor = () => {
     if (isTimeRunning) {
-      return isDanger ? "text-orange-500" : "text-slate-900";
+      return isDanger ? "text-orange-500" : "text-gray-900";
     }
-    return 'text-slate-200'
+    return "text-gray-200";
   };
 
   return (
@@ -94,14 +107,13 @@ function PlayerInfo({ playerInfo, isRight, isTimeRunning }) {
       <div className={clsx("relative", isRight && "order-3")}>
         <Profile
           className="w-44"
-          symbol={playerInfo.symbol}
           name={playerInfo.name}
           rating={playerInfo.rating}
           avatar={playerInfo.avatar}
           {...playerInfo}
         />
         <div className="w-5 h-5 rounded-full bg-white shadow absolute -left-1 -top-1 flex items-center justify-center">
-          <GameSymbol />
+          <GameSymbol symbol={playerInfo.symbol} />
         </div>
       </div>
       <div
@@ -109,9 +121,9 @@ function PlayerInfo({ playerInfo, isRight, isTimeRunning }) {
       ></div>
       <div
         className={clsx(
-          "text-slate-900 text-lg font-semibold w-[60px]",
+          "text-lg font-semibold w-[60px]",
           isRight && "order-1",
-          getTimerColor()
+          getTimerColor(),
         )}
       >
         {minutesString}:{secondsString}
